@@ -640,6 +640,91 @@ class daqDevice():
         if err != 0:
             raise DaqError(err)
 
+    def CvtSetAdcRange(self, Admin, Admax):
+        """Sets the ADC range for use by the conversion functions (i.e., all
+        functions of the form daqCvt... )."""
+
+        err = daq.daqCvtSetAdcRange(ct.c_float(Admin), ct.c_float(Admax))
+        if err != 0:
+            raise DaqError(err)
+
+    def CvtLinearSetupConvert(self, nscan, readingsPos, nReadings, signal1, voltage1, signal2, voltage2, avg, scans):
+        """Both sets up the linear conversion process and converts the ADC
+        readings into floating point numbers."""
+
+        counts = self.dataBuf
+        fValues = (ct.c_float * self.dBufSz)()
+        nValues = self.dBufSz
+
+        err = daq.daqCvtLinearSetupConvert(
+            wt.DWORD(nscan),
+            wt.DWORD(readingsPos),
+            wt.DWORD(nReadings),
+            ct.c_float(signal1),
+            ct.c_float(voltage1),
+            ct.c_float(signal2),
+            ct.c_float(voltage2),
+            wt.DWORD(avg),
+            ct.pointer(counts),
+            wt.DWORD(scans),
+            ct.pointer(fValues),
+            wt.DWORD(nValues),
+            )
+
+        if err != 0:
+            raise DaqError(err)
+        return fValues
+
+    def CalSetupConvert(self, nscan, readingsPos, nReadings, chanType, chanGain, startChan, bipolar, noOffset, counts, scans):
+        """Both configures and performs the calibration of the specified data."""
+
+        err = daq.daqCalSetupConvert(
+            self.handle,
+            wt.DWORD(nscan),
+            wt.DWORD(readingsPos),
+            wt.DWORD(nReadings),
+            chanType,
+            chanGain,
+            wt.DWORD(startChan),
+            ct.c_bool(bipolar),
+            ct.c_bool(noOffset),
+            ct.pointer(counts),
+            wt.DWORD(scans),
+            )
+
+        if err != 0:
+            raise DaqError(err)
+
+    def CalGetConstants(self, channel, gain, AdcRange):
+        """Retrieves the calibration constants from the currently selected
+        calibration table chosen by the daqCalSelectCalTable function."""
+
+        gainConstant = wt.WORD(0)
+        offsetConstant = ct.c_short(0)
+
+        err = daq.daqCalGetConstants(
+            self.handle,
+            wt.WORD(channel),
+            gain,
+            AdcRange,
+            ct.pointer(gainConstant),
+            ct.pointer(offsetConstant),
+            )
+
+        if err != 0:
+            raise DaqError(err)
+        return gainConstant.value, offsetConstant.value
+
+    def CalSelectCalTable(self, tableType):
+        """Selects the calibration table source for the device."""
+
+        err = daq.daqCalSelectCalTable(self.handle, tableType)
+
+        if err != 0:
+            raise DaqError(err)
+
+
+
 if __name__ == '__main__':
     print GetDeviceList()
     dev = daqDevice('DaqBoard2K0')
