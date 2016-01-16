@@ -1,21 +1,23 @@
+#!/usr/bin/env python2
+from __future__ import print_function, absolute_import, division, unicode_literals
 import ctypes as ct
 from ctypes import wintypes as wt
 from ctypes.util import find_library
 
 import sys
 import traceback
-import daqh
+from . import daqh
 
 #initialize Daqx.dll
 dll = find_library('daqx')
-#print "Dll = ", dll
+#print("Dll = ", dll)
 daq = ct.OleDLL(dll)
-#print daq
+#print(daq)
 
-#print dir(daq)
+#print(dir(daq))
 from numpy.ctypeslib import ndpointer
 
-#print dir(daq)
+#print(dir(daq))
 
 class deviceProps(ct.Structure):
     """
@@ -113,7 +115,7 @@ def FormatError(errNum):
 
 ###Handle Class definition
 
-class daqDevice():
+class daqDevice(object):
 
     def __init__(self, deviceName):
 
@@ -123,14 +125,14 @@ class daqDevice():
         pdeviceName = ct.c_char_p(deviceName)
         self.handle = daq.daqOpen(pdeviceName)
         self.props = self.GetDeviceProperties()
-        #print "Handle", self.handle
+        #print("Handle", self.handle)
 
     def __del__(self):
-        print "IOTech Stopping...",
+        print("IOTech Stopping...", end=' ')
         #self.AdcTransferStop()
         #self.AdcDisarm()
         self.Close()
-        print "Done"
+        print("Done")
 
     def CloseDevice(self):
         self.__del__()
@@ -297,7 +299,7 @@ class daqDevice():
 
         err = daq.daqAdcSetRate(self.handle, mode, state, reqValue, pactualValue)
 
-        print reqValue, actualValue
+        print(reqValue, actualValue)
         if err != 0:
             raise DaqError(err)
 
@@ -306,8 +308,8 @@ class daqDevice():
             errRatio = reqValue.value / actualValue.value
             err = abs(1 - errRatio)
             if err > 0.1:
-                print "Frequency setpoint error percentage: ", err * 100
-                raise ValueError, "Frequency setpoint not achievable on hardware. Please choose a different data-rate"
+                print("Frequency setpoint error percentage: ", err * 100)
+                raise ValueError("Frequency setpoint not achievable on hardware. Please choose a different data-rate")
 
         return actualValue.value
 
@@ -410,8 +412,8 @@ class daqDevice():
         """
 
         freq = ct.c_float(freq)
-        #print freq
-        #print freq.value
+        #print(freq)
+        #print(freq.value)
         err = daq.daqAdcSetFreq(self.handle, freq)
 
         if err != 0:
@@ -474,7 +476,7 @@ class daqDevice():
         if convert == None:
             vals = list(buf)
         else:
-            vals = map(convert, buf)
+            vals = list(map(convert, buf))
 
         return vals
 
@@ -502,8 +504,8 @@ class daqDevice():
         """Requests a transfer of scanCount scans from the driver allocated buffer
             to the linear data retrieval buffer (buf)"""
         buf = (wt.WORD * self.chanCount * scanCount)()
-        #print buf, wt.WORD, self.chanCount, scanCount
-        #print buf.shape
+        #print(buf, wt.WORD, self.chanCount, scanCount)
+        #print(buf.shape)
         pbuf = ct.pointer(buf)
 
         scanCount = wt.DWORD(scanCount)
@@ -513,7 +515,7 @@ class daqDevice():
         err = daq.daqAdcTransferBufData(self.handle, pbuf, scanCount, bufMask, pretCount)
         if err != 0:
             raise DaqError(err)
-        #print buf
+        #print(buf)
         return buf, retCount
 
     def AdcTransferSetBuffer(self, transferMask, scanCount, buf = 1):
@@ -726,5 +728,5 @@ class daqDevice():
 
 
 if __name__ == '__main__':
-    print GetDeviceList()
-    dev = daqDevice('DaqBoard2K0')
+    print(GetDeviceList())
+    dev = daqDevice(b'DaqBoard2K0')
