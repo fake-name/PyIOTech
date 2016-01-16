@@ -390,7 +390,7 @@ class daqDevice():
         err = daq.daqAdcSetScan(self.handle, pchan_array, pgain_array, pflag_array, pchanCount)
         if err != 0:
             #self._ErrorHandler(err)
-            self.DaqError(err)
+            DaqError(err)
 
         #Take a ctypes array and make a list.
         for i in gain_array:
