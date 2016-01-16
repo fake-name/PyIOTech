@@ -18,628 +18,628 @@ from numpy.ctypeslib import ndpointer
 #print dir(daq)
 
 class deviceProps(ct.Structure):
-	"""
-	This class emulates a C struct for the device properties calls
-	"""
-	_fields_ = [("deviceType", wt.DWORD),
-				("basePortAddress", wt.DWORD),
-				("dmaChannel", wt.DWORD),
-				("socket", wt.DWORD),
-				("interruptLevel", wt.DWORD),
-				("protocol", wt.DWORD),
-				("alias", ct.c_char*64),
-				("maxAdChannels", wt.DWORD),
-				("maxDaChannels", wt.DWORD),
-				("maxDigInputBits", wt.DWORD),
-				("maxDigOutputBits", wt.DWORD),
-				("maxCtrChannels", wt.DWORD),
-				("mainUnitAdChannels", wt.DWORD),
-				("mainUnitDaChannels", wt.DWORD),
-				("mainUnitDigInputBits", wt.DWORD),
-				("mainUnitDigOutputBits", wt.DWORD),
-				("mainUnitCtrChannels", wt.DWORD),
-				("adFifoSize", wt.DWORD),
-				("daFifoSize", wt.DWORD),
-				("adResolution", wt.DWORD),
-				("daResolution", wt.DWORD),
-				("adMinFreq", ct.c_float),
-				("adMaxFreq", ct.c_float),
-				("daMinFreq", ct.c_float),
-				("daMaxFreq", ct.c_float)]
+    """
+    This class emulates a C struct for the device properties calls
+    """
+    _fields_ = [("deviceType", wt.DWORD),
+                ("basePortAddress", wt.DWORD),
+                ("dmaChannel", wt.DWORD),
+                ("socket", wt.DWORD),
+                ("interruptLevel", wt.DWORD),
+                ("protocol", wt.DWORD),
+                ("alias", ct.c_char*64),
+                ("maxAdChannels", wt.DWORD),
+                ("maxDaChannels", wt.DWORD),
+                ("maxDigInputBits", wt.DWORD),
+                ("maxDigOutputBits", wt.DWORD),
+                ("maxCtrChannels", wt.DWORD),
+                ("mainUnitAdChannels", wt.DWORD),
+                ("mainUnitDaChannels", wt.DWORD),
+                ("mainUnitDigInputBits", wt.DWORD),
+                ("mainUnitDigOutputBits", wt.DWORD),
+                ("mainUnitCtrChannels", wt.DWORD),
+                ("adFifoSize", wt.DWORD),
+                ("daFifoSize", wt.DWORD),
+                ("adResolution", wt.DWORD),
+                ("daResolution", wt.DWORD),
+                ("adMinFreq", ct.c_float),
+                ("adMaxFreq", ct.c_float),
+                ("daMinFreq", ct.c_float),
+                ("daMaxFreq", ct.c_float)]
 
 class daqDeviceListT(ct.Structure):
-	"""
-	This class emulates a C struct for the device name
-	"""
-	_fields_ = [("devicename", ct.c_char * 64)]
+    """
+    This class emulates a C struct for the device name
+    """
+    _fields_ = [("devicename", ct.c_char * 64)]
 
 #Device Initialization Functions
 
 def GetDeviceCount():
-	"""Returns the number of currently configured devices"""
+    """Returns the number of currently configured devices"""
 
-	deviceCount = ct.c_int(0)
-	deviceCountpnt = ct.pointer(deviceCount)
-	daq.daqGetDeviceCount(deviceCountpnt)
+    deviceCount = ct.c_int(0)
+    deviceCountpnt = ct.pointer(deviceCount)
+    daq.daqGetDeviceCount(deviceCountpnt)
 
-	return deviceCount.value
+    return deviceCount.value
 
 def GetDeviceList():
-	"""Returns a list of currently configured device names"""
+    """Returns a list of currently configured device names"""
 
-	devices = []
-	count = GetDeviceCount()
-	countpnt = ct.pointer(ct.c_int(count))
-	devlist = (daqDeviceListT*count)() #Iterable ctypes array
+    devices = []
+    count = GetDeviceCount()
+    countpnt = ct.pointer(ct.c_int(count))
+    devlist = (daqDeviceListT*count)() #Iterable ctypes array
 
-	daq.daqGetDeviceList(devlist, countpnt)
+    daq.daqGetDeviceList(devlist, countpnt)
 
-	for i in devlist:
-		devices.append(i.devicename) #So the function returns a python type
+    for i in devlist:
+        devices.append(i.devicename) #So the function returns a python type
 
-	return devices
+    return devices
 
 def GetDriverVersion():
-	"""Retrieves the revision level of the driver currently in use"""
+    """Retrieves the revision level of the driver currently in use"""
 
-	version = wt.DWORD(1)
-	pversion = ct.pointer(version)
-	daq.daqGetDriverVersion(pversion)
+    version = wt.DWORD(1)
+    pversion = ct.pointer(version)
+    daq.daqGetDriverVersion(pversion)
 
-	return version.value
+    return version.value
 
 #Error Handling
 class DaqError(Exception):
 
-	def __init__(self, errcode):
-		self.errcode = errcode
-		self.msg = FormatError(errcode)
-		self.args = (self.errcode, self.msg)
+    def __init__(self, errcode):
+        self.errcode = errcode
+        self.msg = FormatError(errcode)
+        self.args = (self.errcode, self.msg)
 
-	def __str__(self):
-		return '%i ' % self.errcode + self.msg
+    def __str__(self):
+        return '%i ' % self.errcode + self.msg
 
-	def __getitem__(self,key):
-		return self.args[key]
+    def __getitem__(self,key):
+        return self.args[key]
 
 def FormatError(errNum):
-	"""Returns the text-string equivalent for the specified error condition code"""
+    """Returns the text-string equivalent for the specified error condition code"""
 
-	msg = (ct.c_char*64)() #Messages at minimum is 64 characters
+    msg = (ct.c_char*64)() #Messages at minimum is 64 characters
 
-	daq.daqFormatError(errNum, ct.byref(msg))
+    daq.daqFormatError(errNum, ct.byref(msg))
 
-	return msg.value
+    return msg.value
 
 ###Handle Class definition
 
 class daqDevice():
 
-	def __init__(self, deviceName):
-
-		#Turn off the dll error handler to allow for python exceptions
-		daq.daqSetDefaultErrorHandler(None)
-		self.deviceName = deviceName
-		pdeviceName = ct.c_char_p(deviceName)
-		self.handle = daq.daqOpen(pdeviceName)
-		self.props = self.GetDeviceProperties()
-		#print "Handle", self.handle
-	
-	def __del__(self):
-		print "IOTech Stopping...",
-		#self.AdcTransferStop()
-		#self.AdcDisarm()
-		self.Close()
-		print "Done"
-
-	def CloseDevice(self):
-		self.__del__()
-	
-	def Online(self):
-		"""Determines if a device is online"""
-
-		online = ct.c_bool(False)
-		onlinepnt = ct.pointer(online)
-		err = daq.daqOnline(self.handle, onlinepnt)
-		if err != 0:
-			raise DaqError(err)
-
-		return online.value
-
-	def Close(self):
-		"""Used to close a device"""
-		if self.handle != None:
-			err = daq.daqClose(self.handle)
-			if err != 0:
-				raise DaqError(err)
-			self.handle = None
+    def __init__(self, deviceName):
+
+        #Turn off the dll error handler to allow for python exceptions
+        daq.daqSetDefaultErrorHandler(None)
+        self.deviceName = deviceName
+        pdeviceName = ct.c_char_p(deviceName)
+        self.handle = daq.daqOpen(pdeviceName)
+        self.props = self.GetDeviceProperties()
+        #print "Handle", self.handle
+
+    def __del__(self):
+        print "IOTech Stopping...",
+        #self.AdcTransferStop()
+        #self.AdcDisarm()
+        self.Close()
+        print "Done"
 
-	def GetDeviceProperties(self):
-		"""Returns the properties for a specified device"""
+    def CloseDevice(self):
+        self.__del__()
 
-		properties = {}
+    def Online(self):
+        """Determines if a device is online"""
 
-		deviceNamepnt = ct.c_char_p(self.deviceName)
-		devProps = deviceProps()
-		devicePropspnt = ct.pointer(devProps)
-		err = daq.daqGetDeviceProperties(deviceNamepnt,devicePropspnt)
-		if err != 0:
-			raise DaqError(err)
+        online = ct.c_bool(False)
+        onlinepnt = ct.pointer(online)
+        err = daq.daqOnline(self.handle, onlinepnt)
+        if err != 0:
+            raise DaqError(err)
 
-		#Rather than return a class, device properties are put into
-		# a python dictionary
-		for i in dir(devProps):
-			if not i.startswith('_'):
-				val = getattr(devProps, i)
-				properties[i]=val
+        return online.value
 
-		return properties
+    def Close(self):
+        """Used to close a device"""
+        if self.handle != None:
+            err = daq.daqClose(self.handle)
+            if err != 0:
+                raise DaqError(err)
+            self.handle = None
 
-	def ADConvert(self, request):
-		"""Converts returned 16bit integer to a voltage of a Dbk2000 Bipolar no gain"""
-		cal = 5.0/(2**16)
-		val = request*cal - 2.5
-		return val
+    def GetDeviceProperties(self):
+        """Returns the properties for a specified device"""
 
-	#Error handling functions
-	def SetErrorHandler(self, function=None):
-		"""Specifies the routine to call when an error occurs in any function for the specified device"""
+        properties = {}
 
-		if function == None:
-			function = self._ErrorHandler
-		funcPrototype = ct.WINFUNCTYPE(ct.c_int, ct.c_int)
-		errorFunction = funcPrototype(function)
-		#errorFunction = ct.prototype(function)
-		err = daq.daqSetErrorHandler(self.handle, errorFunction)
-		if err != 0:
-			raise DaqError(err)
+        deviceNamepnt = ct.c_char_p(self.deviceName)
+        devProps = deviceProps()
+        devicePropspnt = ct.pointer(devProps)
+        err = daq.daqGetDeviceProperties(deviceNamepnt,devicePropspnt)
+        if err != 0:
+            raise DaqError(err)
 
-	def ProcessError(self, errCode):
-		"""Initiaties an error for processing by the driver"""
+        #Rather than return a class, device properties are put into
+        # a python dictionary
+        for i in dir(devProps):
+            if not i.startswith('_'):
+                val = getattr(devProps, i)
+                properties[i]=val
 
-		err = daq.daqProcessError(self.handle, errCode)
+        return properties
 
-		if err != 0:
-			raise DaqError(err)
+    def ADConvert(self, request):
+        """Converts returned 16bit integer to a voltage of a Dbk2000 Bipolar no gain"""
+        cal = 5.0/(2**16)
+        val = request*cal - 2.5
+        return val
 
-	def GetLastError(self):
-		"""Retrieves the last error condition code registered by the driver"""
+    #Error handling functions
+    def SetErrorHandler(self, function=None):
+        """Specifies the routine to call when an error occurs in any function for the specified device"""
 
-		errCode = ct.c_int(0)
+        if function == None:
+            function = self._ErrorHandler
+        funcPrototype = ct.WINFUNCTYPE(ct.c_int, ct.c_int)
+        errorFunction = funcPrototype(function)
+        #errorFunction = ct.prototype(function)
+        err = daq.daqSetErrorHandler(self.handle, errorFunction)
+        if err != 0:
+            raise DaqError(err)
 
-		err = daq.daqGetLastError(self.handle, ct.byref(errCode))
+    def ProcessError(self, errCode):
+        """Initiaties an error for processing by the driver"""
 
-		if err != 0:
-			raise DaqError(err)
+        err = daq.daqProcessError(self.handle, errCode)
 
-		return errCode.value
+        if err != 0:
+            raise DaqError(err)
 
-	#Event Handling Functions
+    def GetLastError(self):
+        """Retrieves the last error condition code registered by the driver"""
 
-	def SetTimeout(self, mSecTimeout):
-		"""Sets the time-out for waiting on either a single event or
-			multiple events"""
+        errCode = ct.c_int(0)
 
-		mSecTimeout = wt.DWORD(mSecTimeout)
-		err = daq.daqSetTimeout(self.handle, mSecTimeout)
+        err = daq.daqGetLastError(self.handle, ct.byref(errCode))
 
-		if err != 0:
-			raise DaqError(err)
+        if err != 0:
+            raise DaqError(err)
 
-	def WaitForEvent(self, event):
-		"""Waits on a specific event to occur on the specified event"""
+        return errCode.value
 
-		err = daq.daqWaitForEvent(self.handle, event)
+    #Event Handling Functions
 
-		if err != 0:
-			raise DaqError(err)
+    def SetTimeout(self, mSecTimeout):
+        """Sets the time-out for waiting on either a single event or
+            multiple events"""
 
-	#ADC Acquisition Functions
+        mSecTimeout = wt.DWORD(mSecTimeout)
+        err = daq.daqSetTimeout(self.handle, mSecTimeout)
 
-	def AdcSetAcq(self, mode, preTrigCount = 0, postTrigCount = 0):
-		"""Configures the acquisition mode and the pre- and post-trigger scan durations"""
+        if err != 0:
+            raise DaqError(err)
 
-		if preTrigCount != None:
-			preTrigCount = wt.DWORD(preTrigCount)
-		if postTrigCount != None:
-			postTrigCount = wt.DWORD(postTrigCount)
+    def WaitForEvent(self, event):
+        """Waits on a specific event to occur on the specified event"""
 
-		err = daq.daqAdcSetAcq(self.handle, mode, preTrigCount, postTrigCount)
+        err = daq.daqWaitForEvent(self.handle, event)
 
-		if err != 0:
-			raise DaqError(err)
+        if err != 0:
+            raise DaqError(err)
 
-	def AdcSetTrig(self, triggerSource, rising, level, hysteresis, channel):
-		"""Configures the device for enhanced triggering"""
+    #ADC Acquisition Functions
 
-		level = wt.WORD(level)
-		hysteresis = wt.DWORD(hysteresis)
-		channel = wt.DWORD(channel)
+    def AdcSetAcq(self, mode, preTrigCount = 0, postTrigCount = 0):
+        """Configures the acquisition mode and the pre- and post-trigger scan durations"""
 
-		err = daq.daqAdcSetTrig(self.handle, triggerSource, rising, level,
-				hysteresis, channel)
+        if preTrigCount != None:
+            preTrigCount = wt.DWORD(preTrigCount)
+        if postTrigCount != None:
+            postTrigCount = wt.DWORD(postTrigCount)
 
-		if err != 0:
-			raise DaqError(err)
+        err = daq.daqAdcSetAcq(self.handle, mode, preTrigCount, postTrigCount)
 
-	def AdcSoftTrig(self):
-		"""Used to send a software trigger command to the device"""
+        if err != 0:
+            raise DaqError(err)
 
-		err = daq.daqAdcSoftTrig(self.handle)
+    def AdcSetTrig(self, triggerSource, rising, level, hysteresis, channel):
+        """Configures the device for enhanced triggering"""
 
-		if err != 0:
-			raise DaqError(err)
+        level = wt.WORD(level)
+        hysteresis = wt.DWORD(hysteresis)
+        channel = wt.DWORD(channel)
 
-	#ADC Direct-to-Disk
+        err = daq.daqAdcSetTrig(self.handle, triggerSource, rising, level,
+                hysteresis, channel)
 
-	def AdcSetDiskFile(self, filename, openMode, preWrite):
-		"""Sets a destination file for ADC data transfers.  ADC direct-to-disk
-		transfers will be directed to the specified disk file"""
+        if err != 0:
+            raise DaqError(err)
 
-		preWrite = wt.DWORD(preWrite)
+    def AdcSoftTrig(self):
+        """Used to send a software trigger command to the device"""
 
-		err = daq.daqAdcSetDiskFile(self.handle, filename, openMode, preWrite)
+        err = daq.daqAdcSoftTrig(self.handle)
 
-		if err != 0:
-			raise DaqError(err)
+        if err != 0:
+            raise DaqError(err)
 
+    #ADC Direct-to-Disk
 
-	#ADC Rate Functions
+    def AdcSetDiskFile(self, filename, openMode, preWrite):
+        """Sets a destination file for ADC data transfers.  ADC direct-to-disk
+        transfers will be directed to the specified disk file"""
 
-	def AdcSetRate(self, mode, state, reqValue):
-		"""Configures the acquisition scan rate using the selected device's
-			built-in acquisition pacer clock.
-		"""
+        preWrite = wt.DWORD(preWrite)
 
-		reqValue = ct.c_float(reqValue)
-		actualValue = ct.c_float(0.0)
-		pactualValue = ct.pointer(actualValue)
+        err = daq.daqAdcSetDiskFile(self.handle, filename, openMode, preWrite)
 
-		err = daq.daqAdcSetRate(self.handle, mode, state, reqValue, pactualValue)
+        if err != 0:
+            raise DaqError(err)
 
-		print reqValue, actualValue
-		if err != 0:
-			raise DaqError(err)
-		
-		
-		if mode == daqh.DarmFrequency:
-			errRatio = reqValue.value / actualValue.value
-			err = abs(1 - errRatio)
-			if err > 0.1:
-				print "Frequency setpoint error percentage: ", err * 100
-				raise ValueError, "Frequency setpoint not achievable on hardware. Please choose a different data-rate"
-				
-		return actualValue.value
 
+    #ADC Rate Functions
 
+    def AdcSetRate(self, mode, state, reqValue):
+        """Configures the acquisition scan rate using the selected device's
+            built-in acquisition pacer clock.
+        """
 
-	#Utility Functions
+        reqValue = ct.c_float(reqValue)
+        actualValue = ct.c_float(0.0)
+        pactualValue = ct.pointer(actualValue)
 
-	def GetInfo(self, chan, whichInfo):
-		"""Retrieves hardware information for the specified device"""
+        err = daq.daqAdcSetRate(self.handle, mode, state, reqValue, pactualValue)
 
-		chan = ct.c_int(chan)
-		info = ct.c_float(0)
-		pinfo = ct.pointer(info)
-		err = daq.daqGetInfo(self.handle, chan, whichInfo, pinfo)
+        print reqValue, actualValue
+        if err != 0:
+            raise DaqError(err)
 
-		if err != 0:
-			raise DaqError(err)
-		return info.value
 
-	def GetHardwareInfo(self, whichInfo):
-		"""Retrieves hardware information for the specified device"""
+        if mode == daqh.DarmFrequency:
+            errRatio = reqValue.value / actualValue.value
+            err = abs(1 - errRatio)
+            if err > 0.1:
+                print "Frequency setpoint error percentage: ", err * 100
+                raise ValueError, "Frequency setpoint not achievable on hardware. Please choose a different data-rate"
 
-		info = ct.c_float(0.0)
-		pinfo = ct.pointer(info)
-		err = daq.daqGetHardwareInfo(self.handle, whichInfo, pinfo)
+        return actualValue.value
 
-		if err != 0:
-			raise DaqError(err)
 
-		return info.value
 
-	#Custom ADC Aquisition Functions
+    #Utility Functions
 
-	def AdcSetScan(self, channels, gains, flags):
-		"""Configures an aquisition scan group consisting of multiple channels"""
+    def GetInfo(self, chan, whichInfo):
+        """Retrieves hardware information for the specified device"""
 
-		self.chanCount = len(channels)
-		if type(flags) != list:
-			flags = [flags]
+        chan = ct.c_int(chan)
+        info = ct.c_float(0)
+        pinfo = ct.pointer(info)
+        err = daq.daqGetInfo(self.handle, chan, whichInfo, pinfo)
 
-		#Making ctypes iterable arrays
+        if err != 0:
+            raise DaqError(err)
+        return info.value
 
-		chan_array = (wt.DWORD * self.chanCount)()
-		gain_array = (wt.DWORD * self.chanCount)()
-		flag_array = (wt.DWORD * self.chanCount)()
+    def GetHardwareInfo(self, whichInfo):
+        """Retrieves hardware information for the specified device"""
 
-		#Take the values of a python list and put them in a Ctypes array
-		for i in range(self.chanCount):
-			chan_array[i] = channels[i]
-		for i in range(self.chanCount):
-			gain_array[i] = gains[i]
-		for i in range(self.chanCount):
-			flag_array[i] = flags[i]
+        info = ct.c_float(0.0)
+        pinfo = ct.pointer(info)
+        err = daq.daqGetHardwareInfo(self.handle, whichInfo, pinfo)
 
-		pchan_array = ct.pointer(chan_array)
-		pgain_array = ct.pointer(gain_array)
-		pflag_array = ct.pointer(flag_array)
+        if err != 0:
+            raise DaqError(err)
 
-		err = daq.daqAdcSetScan(self.handle, pchan_array, pgain_array, pflag_array, wt.DWORD(self.chanCount))
-		if err != 0:
-			raise DaqError(err)
+        return info.value
 
-	def AdcGetScan(self):
-		"""Reads the current scan group, which consists of all configured\
-			channels"""
+    #Custom ADC Aquisition Functions
 
-		channels=gains=flags = []
+    def AdcSetScan(self, channels, gains, flags):
+        """Configures an aquisition scan group consisting of multiple channels"""
 
-		#Iterable Ctypes array and pointers to them
-		chan_array = (wt.DWORD*512)()
-		pchan_array = ct.pointer(chan_array)
-		gain_array = (wt.DWORD*512)()
-		pgain_array = ct.pointer(gain_array)
-		flag_array = (wt.DWORD*512)()
-		pflag_array = ct.pointer(flag_array)
+        self.chanCount = len(channels)
+        if type(flags) != list:
+            flags = [flags]
 
-		chanCount = ct.c_int(0)
-		pchanCount = ct.pointer(chanCount)
+        #Making ctypes iterable arrays
 
-		err = daq.daqAdcSetScan(self.handle, pchan_array, pgain_array, pflag_array, pchanCount)
-		if err != 0:
-			#self._ErrorHandler(err)
-			self.DaqError(err)
+        chan_array = (wt.DWORD * self.chanCount)()
+        gain_array = (wt.DWORD * self.chanCount)()
+        flag_array = (wt.DWORD * self.chanCount)()
 
-		#Take a ctypes array and make a list.
-		for i in gain_array:
-			gains.append(i)
-		for i in flag_array:
-			flags.append(i)
-		for i in chan_array:
-			channels.append(i)
+        #Take the values of a python list and put them in a Ctypes array
+        for i in range(self.chanCount):
+            chan_array[i] = channels[i]
+        for i in range(self.chanCount):
+            gain_array[i] = gains[i]
+        for i in range(self.chanCount):
+            flag_array[i] = flags[i]
 
-		vals = {'Channels' : channels, 'Gains' : gains,
-				'Flags' : flags, 'Channelcount' : chanCount}
-		return vals
+        pchan_array = ct.pointer(chan_array)
+        pgain_array = ct.pointer(gain_array)
+        pflag_array = ct.pointer(flag_array)
 
-	def AdcSetFreq(self, freq):
-		"""Calculates and sets the frequency of the interal scan pacer clock of
-			the device using the frequency specified in Hz
-		"""
+        err = daq.daqAdcSetScan(self.handle, pchan_array, pgain_array, pflag_array, wt.DWORD(self.chanCount))
+        if err != 0:
+            raise DaqError(err)
 
-		freq = ct.c_float(freq)
-		#print freq
-		#print freq.value
-		err = daq.daqAdcSetFreq(self.handle, freq)
+    def AdcGetScan(self):
+        """Reads the current scan group, which consists of all configured\
+            channels"""
 
-		if err != 0:
-			raise DaqError(err)
+        channels=gains=flags = []
 
-	def AdcGetFreq(self):
-		"""Returns the frequency of the Internal ADC Clock
-		"""
+        #Iterable Ctypes array and pointers to them
+        chan_array = (wt.DWORD*512)()
+        pchan_array = ct.pointer(chan_array)
+        gain_array = (wt.DWORD*512)()
+        pgain_array = ct.pointer(gain_array)
+        flag_array = (wt.DWORD*512)()
+        pflag_array = ct.pointer(flag_array)
 
-		freq = ct.c_float(0)
-		pfreq = ct.pointer(freq)
-		err = daq.daqAdcGetFreq(self.handle, pfreq)
+        chanCount = ct.c_int(0)
+        pchanCount = ct.pointer(chanCount)
 
-		if err != 0:
-			raise DaqError(err)
+        err = daq.daqAdcSetScan(self.handle, pchan_array, pgain_array, pflag_array, pchanCount)
+        if err != 0:
+            #self._ErrorHandler(err)
+            self.DaqError(err)
 
-		return freq.value
+        #Take a ctypes array and make a list.
+        for i in gain_array:
+            gains.append(i)
+        for i in flag_array:
+            flags.append(i)
+        for i in chan_array:
+            channels.append(i)
 
-	#One-Step ADC functions
+        vals = {'Channels' : channels, 'Gains' : gains,
+                'Flags' : flags, 'Channelcount' : chanCount}
+        return vals
 
-	def AdcRd(self, chan, gain, flags, convert = None):
-		"""Takes a single reading from the given local A/D channel using a software trigger"""
+    def AdcSetFreq(self, freq):
+        """Calculates and sets the frequency of the interal scan pacer clock of
+            the device using the frequency specified in Hz
+        """
 
-		sample = ct.c_long(0)
-		psample = ct.pointer(sample)
+        freq = ct.c_float(freq)
+        #print freq
+        #print freq.value
+        err = daq.daqAdcSetFreq(self.handle, freq)
 
-		err = daq.daqAdcRd(self.handle, chan, psample, wt.DWORD(gain),
-					 flags)
-		if err != 0:
-			raise DaqError(err)
+        if err != 0:
+            raise DaqError(err)
 
-		#Allow values to be converted through one call of the function
-		#Or just return the value from the daqboard
-		if convert == None:
-			sample = sample.value
-		else:
-			sample = convert(sample.value)
+    def AdcGetFreq(self):
+        """Returns the frequency of the Internal ADC Clock
+        """
 
-		return sample
+        freq = ct.c_float(0)
+        pfreq = ct.pointer(freq)
+        err = daq.daqAdcGetFreq(self.handle, pfreq)
 
-	def AdcRdScan(self, startChan, endChan, gain, flags, convert = None):
-		"""Immediately activates a software trigger to acquire one scan on each channel
+        if err != 0:
+            raise DaqError(err)
 
-			The scan begins with startChan and ends with endChan"""
+        return freq.value
 
-		#Buffer length is always the number of channels
-		bufLength = endChan - startChan + 1
-		buf = (wt.WORD * bufLength)()
-		pbuf = ct.pointer(buf)
+    #One-Step ADC functions
 
-		err = daq.daqAdcRdScan(self.handle, wt.DWORD(startChan), wt.DWORD(endChan),
-						 pbuf, wt.DWORD(gain), flags[0])
+    def AdcRd(self, chan, gain, flags, convert = None):
+        """Takes a single reading from the given local A/D channel using a software trigger"""
 
-		if err != 0:
-			raise DaqError(err)
+        sample = ct.c_long(0)
+        psample = ct.pointer(sample)
 
-		vals = []
-		#Convert return values using a function passed to convert
-		#or just return the bit values from the daqboard
-		if convert == None:
-			vals = list(buf)
-		else:
-			vals = map(convert, buf)
+        err = daq.daqAdcRd(self.handle, chan, psample, wt.DWORD(gain),
+                     flags)
+        if err != 0:
+            raise DaqError(err)
 
-		return vals
+        #Allow values to be converted through one call of the function
+        #Or just return the value from the daqboard
+        if convert == None:
+            sample = sample.value
+        else:
+            sample = convert(sample.value)
 
-	#ADC Acquisition Trigger
+        return sample
 
-	def SetTriggerEvent(self, trigSource, trigSensitivity, channel, gainCode,
-						flags, channelType, level, variance, event):
-		"""Sets an acquisition trigger start event or stop event"""
+    def AdcRdScan(self, startChan, endChan, gain, flags, convert = None):
+        """Immediately activates a software trigger to acquire one scan on each channel
 
-		if level != None:
-			level = ct.c_float(level)
+            The scan begins with startChan and ends with endChan"""
 
-		if variance != None:
-			variance = ct.c_float(variance)
-		
-		err = daq.daqSetTriggerEvent(self.handle, trigSource, trigSensitivity,
-							channel, wt.DWORD(gainCode), flags, channelType,
-							level, variance, event)
+        #Buffer length is always the number of channels
+        bufLength = endChan - startChan + 1
+        buf = (wt.WORD * bufLength)()
+        pbuf = ct.pointer(buf)
 
-		if err != 0:
-			raise DaqError(err)
+        err = daq.daqAdcRdScan(self.handle, wt.DWORD(startChan), wt.DWORD(endChan),
+                         pbuf, wt.DWORD(gain), flags[0])
 
-	#ADC Transfer Buffer
-	def AdcTransferBufData(self, scanCount, bufMask):
-		"""Requests a transfer of scanCount scans from the driver allocated buffer
-			to the linear data retrieval buffer (buf)"""
-		buf = (wt.WORD * self.chanCount * scanCount)()
-		#print buf, wt.WORD, self.chanCount, scanCount
-		#print buf.shape
-		pbuf = ct.pointer(buf)
+        if err != 0:
+            raise DaqError(err)
 
-		scanCount = wt.DWORD(scanCount)
+        vals = []
+        #Convert return values using a function passed to convert
+        #or just return the bit values from the daqboard
+        if convert == None:
+            vals = list(buf)
+        else:
+            vals = map(convert, buf)
 
-		retCount = wt.DWORD(0)
-		pretCount = ct.pointer(retCount)
-		err = daq.daqAdcTransferBufData(self.handle, pbuf, scanCount, bufMask, pretCount)
-		if err != 0:
-			raise DaqError(err)
-		#print buf
-		return buf, retCount
+        return vals
 
-	def AdcTransferSetBuffer(self, transferMask, scanCount, buf = 1):
-		"""Configure transfer buffer for acquired data"""
+    #ADC Acquisition Trigger
 
-		#Buffer has a length of the number of scans
-		if buf:
-			self.dBufSz = scanCount * self.chanCount
-			buf = (wt.WORD * self.dBufSz)()
-			pbuf = ct.pointer(buf)
-		else:
-			pbuf = None
-		self.scanCount = scanCount
-		
-		scanCount = wt.DWORD(scanCount)
-		err = daq.daqAdcTransferSetBuffer(self.handle, pbuf, scanCount, transferMask)
+    def SetTriggerEvent(self, trigSource, trigSensitivity, channel, gainCode,
+                        flags, channelType, level, variance, event):
+        """Sets an acquisition trigger start event or stop event"""
 
-		if err != 0:
-			raise DaqError(err)
+        if level != None:
+            level = ct.c_float(level)
 
-		self.dataBuf = buf
+        if variance != None:
+            variance = ct.c_float(variance)
 
-	def AdcTransferStart(self):
-		"""Initiates an ADC acquisition transfer"""
+        err = daq.daqSetTriggerEvent(self.handle, trigSource, trigSensitivity,
+                            channel, wt.DWORD(gainCode), flags, channelType,
+                            level, variance, event)
 
-		err = daq.daqAdcTransferStart(self.handle)
+        if err != 0:
+            raise DaqError(err)
 
-		if err != 0:
-			raise DaqError(err)
+    #ADC Transfer Buffer
+    def AdcTransferBufData(self, scanCount, bufMask):
+        """Requests a transfer of scanCount scans from the driver allocated buffer
+            to the linear data retrieval buffer (buf)"""
+        buf = (wt.WORD * self.chanCount * scanCount)()
+        #print buf, wt.WORD, self.chanCount, scanCount
+        #print buf.shape
+        pbuf = ct.pointer(buf)
 
-	def AdcTransferStop(self):
-		"""Stops a current ADC buffer transfer, if one is active"""
+        scanCount = wt.DWORD(scanCount)
 
-		daq.daqAdcTransferStop(self.handle)
+        retCount = wt.DWORD(0)
+        pretCount = ct.pointer(retCount)
+        err = daq.daqAdcTransferBufData(self.handle, pbuf, scanCount, bufMask, pretCount)
+        if err != 0:
+            raise DaqError(err)
+        #print buf
+        return buf, retCount
 
-	def AdcTransferGetStat(self):
-		"""Retrieves the current state of an acquisition transfer"""
+    def AdcTransferSetBuffer(self, transferMask, scanCount, buf = 1):
+        """Configure transfer buffer for acquired data"""
 
-		self.active = wt.DWORD(0)
-		self.retCount = wt.DWORD(0)
-		self.pactive = ct.pointer(self.active)
-		self.pretCount = ct.pointer(self.retCount)
+        #Buffer has a length of the number of scans
+        if buf:
+            self.dBufSz = scanCount * self.chanCount
+            buf = (wt.WORD * self.dBufSz)()
+            pbuf = ct.pointer(buf)
+        else:
+            pbuf = None
+        self.scanCount = scanCount
 
-		err = daq.daqAdcTransferGetStat(self.handle, self.pactive, self.pretCount)
-		if err != 0:
-			raise DaqError(err)
+        scanCount = wt.DWORD(scanCount)
+        err = daq.daqAdcTransferSetBuffer(self.handle, pbuf, scanCount, transferMask)
 
-		return {'active':self.active.value, 'retCount':self.retCount.value}
+        if err != 0:
+            raise DaqError(err)
 
-	#ADC Acquisition Control
+        self.dataBuf = buf
 
-	def AdcArm(self):
-		"""Arms an ADC acquisition by enabling the currently defined ADC"""
+    def AdcTransferStart(self):
+        """Initiates an ADC acquisition transfer"""
 
-		err = daq.daqAdcArm(self.handle)
+        err = daq.daqAdcTransferStart(self.handle)
 
-		if err != 0:
-			raise DaqError(err)
+        if err != 0:
+            raise DaqError(err)
 
-	def AdcDisarm(self):
-		"""Disarms an ADC acquisition, if one is currently active"""
+    def AdcTransferStop(self):
+        """Stops a current ADC buffer transfer, if one is active"""
 
-		err = daq.daqAdcDisarm(self.handle)
+        daq.daqAdcTransferStop(self.handle)
 
-		if err != 0:
-			raise DaqError(err)
+    def AdcTransferGetStat(self):
+        """Retrieves the current state of an acquisition transfer"""
 
-	#One step DAC functions
+        self.active = wt.DWORD(0)
+        self.retCount = wt.DWORD(0)
+        self.pactive = ct.pointer(self.active)
+        self.pretCount = ct.pointer(self.retCount)
 
-	def DacWt(self, deviceType, chan, dataVal):
-		"""Sets the output value of a local or expansion DAC channel"""
+        err = daq.daqAdcTransferGetStat(self.handle, self.pactive, self.pretCount)
+        if err != 0:
+            raise DaqError(err)
 
-		#Very specific to the daqboard2k series...should be fixed
-		#Setup so you can just pass a voltage in.
-		if dataVal >= 10.0:
-			dataVal = 65535
-		if dataVal <= -10.0:
-			dataVal = 0
-		else:
-			dataVal = (dataVal+10.0)/(20.0/65535)
+        return {'active':self.active.value, 'retCount':self.retCount.value}
 
-		err = daq.daqDacWt(self.handle, deviceType, chan, wt.WORD(int(dataVal)))
+    #ADC Acquisition Control
 
-		if err != 0:
-			raise DaqError(err)
-	
-	def AdcSetClockSource(self, clockSettings):
-		""" Sets the clock source for the ADC on supported boards """
-		
-		err = daq.daqAdcSetClockSource(self.handle, clockSettings)
-		if err != 0:
-			raise DaqError(err)
+    def AdcArm(self):
+        """Arms an ADC acquisition by enabling the currently defined ADC"""
 
-	def SetOption(self, chan, flags, optionType, optionValue):
+        err = daq.daqAdcArm(self.handle)
 
-		self.optChan = wt.DWORD(chan)
-		self.optFlags = wt.DWORD(flags)
-		#optionType = ct.c_int16(optionType)
-		self.optionValue = ct.c_float(optionValue)
-		
-		err = daq.daqSetOption(self.handle, self.optChan, self.optFlags, optionType, self.optionValue)
-		if err != 0:
-			raise DaqError(err)
+        if err != 0:
+            raise DaqError(err)
 
-		#DAQAPI DaqError WINAPI  daqSetOption(DaqHandleT handle, DWORD chan, DWORD flags, DaqOptionType optionType, FLOAT optionValue);
+    def AdcDisarm(self):
+        """Disarms an ADC acquisition, if one is currently active"""
 
-	def IOGet8255Conf(self, portA, portB, portCHigh, portCLow):
+        err = daq.daqAdcDisarm(self.handle)
 
-		config = wt.DWORD()
-		configPtr = ct.pointer(config)
-		err = daq.daqIOGet8255Conf(self.handle, portA, portB, portCHigh, portCLow, configPtr)
-		if err != 0:
-			raise DaqError(err)
-		return config.value
+        if err != 0:
+            raise DaqError(err)
 
+    #One step DAC functions
 
-	def IOWrite(self, devType, devPort, whichDevice, whichExpPort, value):
+    def DacWt(self, deviceType, chan, dataVal):
+        """Sets the output value of a local or expansion DAC channel"""
 
-		whichDevice = wt.DWORD(whichDevice)
-		value = wt.DWORD(value)
-		valuePtr = ct.pointer(value)
+        #Very specific to the daqboard2k series...should be fixed
+        #Setup so you can just pass a voltage in.
+        if dataVal >= 10.0:
+            dataVal = 65535
+        if dataVal <= -10.0:
+            dataVal = 0
+        else:
+            dataVal = (dataVal+10.0)/(20.0/65535)
 
-		err = daq.daqIOGet8255Conf(self.handle, devType, devPort, whichDevice, whichExpPort, valuePtr)
-		if err != 0:
-			raise DaqError(err)
-		
+        err = daq.daqDacWt(self.handle, deviceType, chan, wt.WORD(int(dataVal)))
+
+        if err != 0:
+            raise DaqError(err)
+
+    def AdcSetClockSource(self, clockSettings):
+        """ Sets the clock source for the ADC on supported boards """
+
+        err = daq.daqAdcSetClockSource(self.handle, clockSettings)
+        if err != 0:
+            raise DaqError(err)
+
+    def SetOption(self, chan, flags, optionType, optionValue):
+
+        self.optChan = wt.DWORD(chan)
+        self.optFlags = wt.DWORD(flags)
+        #optionType = ct.c_int16(optionType)
+        self.optionValue = ct.c_float(optionValue)
+
+        err = daq.daqSetOption(self.handle, self.optChan, self.optFlags, optionType, self.optionValue)
+        if err != 0:
+            raise DaqError(err)
+
+        #DAQAPI DaqError WINAPI  daqSetOption(DaqHandleT handle, DWORD chan, DWORD flags, DaqOptionType optionType, FLOAT optionValue);
+
+    def IOGet8255Conf(self, portA, portB, portCHigh, portCLow):
+
+        config = wt.DWORD()
+        configPtr = ct.pointer(config)
+        err = daq.daqIOGet8255Conf(self.handle, portA, portB, portCHigh, portCLow, configPtr)
+        if err != 0:
+            raise DaqError(err)
+        return config.value
+
+
+    def IOWrite(self, devType, devPort, whichDevice, whichExpPort, value):
+
+        whichDevice = wt.DWORD(whichDevice)
+        value = wt.DWORD(value)
+        valuePtr = ct.pointer(value)
+
+        err = daq.daqIOGet8255Conf(self.handle, devType, devPort, whichDevice, whichExpPort, valuePtr)
+        if err != 0:
+            raise DaqError(err)
+
 if __name__ == '__main__':
-	print GetDeviceList()
-	dev = daqDevice('DaqBoard2K0')
+    print GetDeviceList()
+    dev = daqDevice('DaqBoard2K0')

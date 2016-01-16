@@ -861,19 +861,19 @@ DcovWbk17DetCtrl_Update_Dig      = 16 # Update DigOut On Detection (using DigMas
 DcovPga516LowPassBypass    = 0
 DcovPga516LowPassOn        = 1
 
-# DaqBook/2000 Ignore First Scan settings (On/Off) 
+# DaqBook/2000 Ignore First Scan settings (On/Off)
 DbovIgnoreFirstScanOff		= 0
 DbovIgnoreFirstScanOn		= 1
 
-# Enhanced Counter Debounce Times   
+# Enhanced Counter Debounce Times
 DcovCounterEnhDebounce500ns     = 0
 DcovCounterEnhDebounce1500ns    = 1
 DcovCounterEnhDebounce3500ns    = 2
 DcovCounterEnhDebounce7500ns    = 3
 DcovCounterEnhDebounce15500ns   = 4
 DcovCounterEnhDebounce31500ns   = 5
-DcovCounterEnhDebounce63500ns   = 6   
-DcovCounterEnhDebounce127500ns  = 7   
+DcovCounterEnhDebounce63500ns   = 6
+DcovCounterEnhDebounce127500ns  = 7
 DcovCounterEnhDebounce100us     = 8
 DcovCounterEnhDebounce300us     = 9
 DcovCounterEnhDebounce700us     = 10
@@ -909,16 +909,16 @@ DcovCounterEnhMode_OFF        		= 0x0000 #Disabled/Cleared state
 DcovCounterEnhMode_Counter    		= 0x0100
 DcovCounterEnhCounter_Totalize    	= 0x00
 DcovCounterEnhCounter_ClearOnRead 	= 0x01
-   
+
 DcovCounterEnhCounter_RollOver    	= 0x00
 DcovCounterEnhCounter_StopOnTop   	= 0x02
-   
+
 DcovCounterEnhCounter_LatchOnSOS  	= 0x00
 DcovCounterEnhCounter_LatchOnMap  	= 0x08
-   
+
 DcovCounterEnhCounter_DecrementOff	= 0x00
 DcovCounterEnhCounter_DecrementOn 	= 0x20
-   
+
 DcovCounterEnhCounter_CountChan   	= 0x00
 DcovCounterEnhCounter_CountMap    	= 0x40
 
