@@ -3,21 +3,14 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 import ctypes as ct
 from ctypes import wintypes as wt
 from ctypes.util import find_library
-
-import sys
-import traceback
 from . import daqh
 
 #initialize Daqx.dll
 dll = find_library('daqx')
 #print("Dll = ", dll)
 daq = ct.OleDLL(dll)
-#print(daq)
 
-#print(dir(daq))
-from numpy.ctypeslib import ndpointer
 
-#print(dir(daq))
 
 class deviceProps(ct.Structure):
     """
@@ -642,6 +635,8 @@ class daqDevice(object):
         if err != 0:
             raise DaqError(err)
 
+    #Calibration and conversion functions
+
     def CvtSetAdcRange(self, Admin, Admax):
         """Sets the ADC range for use by the conversion functions (i.e., all
         functions of the form daqCvt... )."""
@@ -690,6 +685,37 @@ class daqDevice(object):
             wt.DWORD(startChan),
             ct.c_bool(bipolar),
             ct.c_bool(noOffset),
+            ct.pointer(counts),
+            wt.DWORD(scans),
+            )
+
+        if err != 0:
+            raise DaqError(err)
+
+    def CalSetup(self, nscan, readingsPos, nReadings, chanType, chanGain, startChan, bipolar, noOffset):
+        """Configures the order and type of data to be calibrated."""
+
+        err = daq.daqCalSetup(
+            self.handle,
+            wt.DWORD(nscan),
+            wt.DWORD(readingsPos),
+            wt.DWORD(nReadings),
+            chanType,
+            chanGain,
+            wt.DWORD(startChan),
+            ct.c_bool(bipolar),
+            ct.c_bool(noOffset),
+            )
+
+        if err != 0:
+            raise DaqError(err)
+
+    def CalConvert(self, counts, scans):
+        """Performs the calibration of one or more scans according to the
+        previously called CalSetup function."""
+
+        err = daq.daqCalConvert(
+            self.handle,
             ct.pointer(counts),
             wt.DWORD(scans),
             )
