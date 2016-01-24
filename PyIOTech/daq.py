@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from __future__ import print_function, absolute_import, division, unicode_literals
 import ctypes as ct
 from ctypes import wintypes as wt

@@ -1,8 +1,8 @@
-from daq import daqDevice
-from daqh import DddtLocal
+from PyIOTech.daq import daqDevice
+from PyIOTech.daqh import DddtLocal
 
 #Open the device named DaqBoard2KO
-dev = daqDevice('DaqBoard2K0')
+dev = daqDevice(b'DaqBoard2K0')
 
 #Configure our Output data
 channel = 0

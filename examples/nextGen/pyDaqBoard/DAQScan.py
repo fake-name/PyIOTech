@@ -1,6 +1,6 @@
 
-import daq
-import daqh
+from PyIOTech import daq
+from PyIOTech import daqh
 
 import time
 import sys
@@ -20,7 +20,7 @@ import matplotlib.pyplot as pplt
 #print daq.GetDeviceList()
 
 
-devName = 'DaqBoard3001USB{321752}'
+devName = b'DaqBoard3001USB{321752}'
 
 
 class IOTechConfiguration:
