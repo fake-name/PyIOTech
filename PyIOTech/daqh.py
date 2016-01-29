@@ -488,6 +488,11 @@ DbotFifoCycleMode       = 0x8002   # True/False  where True enables the mode
 DbotFifoCycleSize       = 0x8003   # Cycle buffer length in WORD's
 DbotFifoFlush           = 0x8004   # Flush all data in the FIFO now.
 DbotFifoNoFlushOnDisarm = 0x8005   # Disable Buffer Flushing upon Disarm
+DbotIgnoreFirstScan     = 0x8006   # Ignore First Scan (DaqBook/2000 Series - Used for Slaved GSYNC Mode)
+
+# Enhanced Digital Control
+DbotOverSampleAmount    = 0x8007
+DbotDigLatchOnAdcSample = 0x8008
 
 # Dig I/O  Counter  & Timer Configuration & Control
 DcotDigitalOption       = 0x1000  # bit mask that marks all Digital options.
