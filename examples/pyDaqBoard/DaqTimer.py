@@ -1,5 +1,5 @@
-from daq import daqDevice
-from daqh import DgainX1, DafBipolar, DddtLocal
+from PyIOTech.daq import daqDevice
+from PyIOTech.daqh import DgainX1, DafBipolar, DddtLocal
 import time
 
 """
@@ -9,7 +9,7 @@ Two timer functions will be set up to run at the same time
 """
 
 #Setup the devices
-dev = daqDevice('DaqBoard2K0')
+dev = daqDevice(b'DaqBoard2K0')
 
 #Runtime
 runtime = 10

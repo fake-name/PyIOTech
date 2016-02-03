@@ -1,6 +1,6 @@
 
-import daq
-import daqh
+from PyIOTech import daq
+from PyIOTech import daqh
 import time
 #import sys
 import csv

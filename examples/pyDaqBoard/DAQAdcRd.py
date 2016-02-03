@@ -1,7 +1,7 @@
-from daq import daqDevice
-from daqh import DgainX1, DafBipolar,DafUnsigned
+from PyIOTech.daq import daqDevice
+from PyIOTech.daqh import DgainX1, DafBipolar,DafUnsigned
 
-dev = daqDevice('DaqBoard3031USB')
+dev = daqDevice(b'DaqBoard3031USB')
 chan = 0
 gain = DgainX1
 flags = DafBipolar|DafUnsigned
