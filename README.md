@@ -11,7 +11,17 @@ This is a pure python distribution with no external dependencies (except the IOT
 To install, run: `$ python setup.py install`
 
 
+## Credits
+
+Heavily based on [pydaqboard](https://code.google.com/archive/p/pydaqboard/).
+
+
+## License
+
+GNU General Public License, version 2.
+
+
 ## Maintainers wanted!
 
- I'm currently no longer employed at a lab using IOTech devices, so I'm no longer in a position to maintain this library. If you're interested in being a maintainer for this package, just ask and I'll happily give you write permissions.
+I'm currently no longer employed at a lab using IOTech devices, so I'm no longer in a position to maintain this library. If you're interested in being a maintainer for this package, just ask and I'll happily give you write permissions.
 
