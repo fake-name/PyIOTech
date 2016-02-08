@@ -9,14 +9,14 @@ class SettingsWindow(wx.Frame):
 	def __init__(self, parent, *args, **kwds):
 
 		self.parent = parent
-		
-		
+
+
 		kwds["title"] = "pyDAQ Settings"
-		kwds["style"] = wx.DEFAULT_FRAME_STYLE|wx.STAY_ON_TOP
+		kwds["style"] = wx.DEFAULT_FRAME_STYLE | wx.STAY_ON_TOP
 
 		wx.Frame.__init__(self, parent, *args, **kwds)
 
-		self.scrolledPanel = wx.lib.scrolledpanel.ScrolledPanel(self, style = wx.BORDER_SUNKEN)
+		self.scrolledPanel = wx.lib.scrolledpanel.ScrolledPanel(self, style=wx.BORDER_SUNKEN)
 
 
 
@@ -27,14 +27,15 @@ class SettingsWindow(wx.Frame):
 
 
 
-		
+
 		self.scrolledSizer = wx.BoxSizer(wx.VERTICAL)
 
 
 
 
 		text = "Ooga booga\n" * 100
-		static_text=wx.StaticText(self.scrolledPanel, -1, text)
+		print self.parent.IOTechConfig.channelOpts
+		static_text = wx.StaticText(self.scrolledPanel, -1, text)
 
 		self.scrolledSizer.Add(static_text, wx.EXPAND, 0)
 
@@ -45,7 +46,7 @@ class SettingsWindow(wx.Frame):
 		self.SetSize(size)
 		self.SetMinSize(size)
 
-		
+
 		self.scrolledPanel.SetInitialSize(size)
 		#self.mainWindowSizer.SetSizeHints(self.scrolledPanel.GetParent())
 		self.scrolledPanel.SetupScrolling()
@@ -59,12 +60,12 @@ class SettingsWindow(wx.Frame):
 
 		headerStaticText = wx.StaticText(self, -1, "IOTech Channel Configuration")
 
-		self.mainSizer.Add(headerStaticText, 0, wx.EXPAND|wx.ALL, 5)
+		self.mainSizer.Add(headerStaticText, 0, wx.EXPAND | wx.ALL, 5)
 
 		self.mainSizer.Add(self.scrolledPanel, 1, wx.EXPAND, 0)
 
 
-		self.mainSizer.Add(self.__footerSizer(), 0, wx.EXPAND|wx.ALL, 5)
+		self.mainSizer.Add(self.__footerSizer(), 0, wx.EXPAND | wx.ALL, 5)
 
 
 		self.SetSizerAndFit(self.mainSizer)
@@ -76,17 +77,19 @@ class SettingsWindow(wx.Frame):
 
 		footerButtonOK		=  wx.Button(self, -1, "Ok")
 		footerButtonAddChannel	=  wx.Button(self, -1, "Add Channel")
+		footerButtonAddChannel.Bind(wx.EVT_BUTTON, self.addItem)
 		footerSizer.Add(footerButtonOK)
 
-		footerSizer.Add((10,10), 1, wx.EXPAND)
+		footerSizer.Add((10, 10), 1, wx.EXPAND)
 
 		footerSizer.Add(footerButtonAddChannel)
 
 		return footerSizer
-	
-	def addItem(self, item):
+
+	def addItem(self, event):
 		#Magic
-		self.scrolledSizer.FitInside()
+		print "AddItem"
+		print self.parent.IOTechConfig.buildChannelConfigurationArrays()
 
 	def onFocus(self, event):
 		self.scrolledPanel.SetFocus()
@@ -94,26 +97,28 @@ class SettingsWindow(wx.Frame):
 
 
 
-	def quitApp(self,event):
+	def quitApp(self, event):
 		self.Destroy()
 		self.parent.Enable()
 
+
 def start(parent):
-	
+
 	parent.Disable()
-	
+
 	my_frame = SettingsWindow(parent)
 	my_frame.Show()
-	
+
 	parent.Enable()
 
 
 
 class EmptyParent:
 
-	
+
 	def Disable(self):
 		pass
+
 	def Enable(self):
 		pass
 

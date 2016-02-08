@@ -12,12 +12,12 @@ class Box:				# Box class permits passing by reference. Any function passed queV
 
 	def update(self, item):
 		self.item = item
-		
+
 	def unbox(self):
 
 		return self.item
 
- 
+
 class RingBuffer(list):
 	"""
 	inherits deque, pops the oldest data to make room
@@ -26,7 +26,7 @@ class RingBuffer(list):
 	def __init__(self, size):
 		list.__init__(self)
 		self.size = size
-		
+
 	def append(self, item):
 		if len(self) >= self.size:
 			self.pop(0)
@@ -56,7 +56,7 @@ class ConfigObj:
 	logName		=	"IIC Temp Log %s, %s.txt" % (time.time(), time.strftime("%Y-%m-%d %H;%M;%S;", time.gmtime()))
 
 	visualization	=	True
-	
+
 	scaled = True
 
 	Qin		=	Queue.Queue()
@@ -71,9 +71,9 @@ class ConfigObj:
 
 	def regenArayVars(self, arSz):
 
-		
+
 		self.tmpRawAr = Box(None)		# delta temp array scaled to 0-1 for display
-	
+
 
 
 

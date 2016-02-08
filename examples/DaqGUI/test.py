@@ -1,6 +1,6 @@
 
 
-import pyDaqBoard.DAQScan as DaqS
+import DAQScan as DaqS
 import time
 import queVars
 
