@@ -17,7 +17,7 @@ try:
 		run()
 except:
 	print "Cannot profile interpreter"
-	
+
 	def profrun():
 		run()
 
@@ -25,9 +25,9 @@ except:
 
 def run():
 
-	
+
 	import GUI		# Have to import after queVars config variables are set
-	
+
 	#queVars.cnf.serThread = threading.Thread(target = serIO.mainLoop, name = "serThread")
 
 	#queVars.cnf.serThread.start()
@@ -46,7 +46,7 @@ if __name__ == "__main__":
 	import pstats
 
 	cProfile.run('run()', 'fooprof')
-	
+
 	print "Exiting"
 	p = pstats.Stats('fooprof')
 	p.strip_dirs().sort_stats(-1).print_stats()
@@ -56,4 +56,4 @@ if __name__ == "__main__":
 	p.sort_stats('time').print_stats(10)
 	p.dump_stats("runStat.txt")
 	'''
-	
+

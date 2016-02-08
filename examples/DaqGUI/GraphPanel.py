@@ -30,7 +30,7 @@ class GraphPanel(wx.Panel):
 		#super(GridPanel, self).__init__(None, -1, 'CursorTracker')	# Call inheritor's __init__
 
 
-	
+
 
 		self.mdc = None 		# memory dc to draw off-screen
 
@@ -112,11 +112,11 @@ class GraphPanel(wx.Panel):
 			dataY = ((self.data[..., self.channel].astype(np.float) - dataMin) * scaleFactor) + 1
 
 			pointList = []
-			
+
 			for offset in xrange(dataLen):
 				tX = dataX[offset]
 				tY = dataY[offset]
-				
+
 				pointList.append((tX, tY))
 
 			dc.DrawPointList(pointList, self.penWhite)

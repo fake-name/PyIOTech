@@ -12,18 +12,20 @@ import sys
 import queVars
 import time
 
-import pyDaqBoard.DAQScan as DaqS
+import DAQScan as DaqS
 
 import GraphPanel as vizFrame
 
 
 import settingsWindow
 
-class RedirectText:
-	def __init__(self,aWxTextCtrl):
-		self.out=aWxTextCtrl
 
-	def write(self,string):
+class RedirectText:
+
+	def __init__(self, aWxTextCtrl):
+		self.out = aWxTextCtrl
+
+	def write(self, string):
 		wx.CallAfter(self.out.AppendText, string)
 # end wxGlade
 
@@ -37,7 +39,7 @@ class LoggerFrame(wx.Frame):
 
 	def __init__(self, *args, **kwds):
 		# begin wxGlade: ThermFrame.__init__
-		kwds["style"] = wx.CAPTION|wx.CLOSE_BOX|wx.MINIMIZE_BOX|wx.MAXIMIZE_BOX|wx.SYSTEM_MENU|wx.RESIZE_BORDER|wx.TAB_TRAVERSAL|wx.CLIP_CHILDREN
+		kwds["style"] = wx.CAPTION | wx.CLOSE_BOX | wx.MINIMIZE_BOX | wx.MAXIMIZE_BOX | wx.SYSTEM_MENU | wx.RESIZE_BORDER | wx.TAB_TRAVERSAL | wx.CLIP_CHILDREN
 		wx.Frame.__init__(self, *args, **kwds)
 
 
@@ -55,10 +57,8 @@ class LoggerFrame(wx.Frame):
 		self.__createLayoutObjs()
 		self.__do_layout()
 
-		self.__setupIOTech()
-		self.VizEnable = queVars.cnf.visualization
 
-		self.__toggleVizObj()
+
 
 		# end wxGlade
 		self.filterTimer = wx.Timer(self)
@@ -83,7 +83,7 @@ class LoggerFrame(wx.Frame):
 		# Should generate list of IOTech Devices
 		print "Needs to be Implemented"
 
-		return wx.Panel(self) #wx.ComboBox(self, -1, choices=availableSerPortList, style=wx.CB_DROPDOWN)
+		return wx.ComboBox(self, -1, choices=availableSerPortList, style=wx.CB_DROPDOWN)
 
 	def __set_properties(self):
 		# begin wxGlade: ThermFrame.__set_properties
@@ -91,7 +91,7 @@ class LoggerFrame(wx.Frame):
 		self.SetBackgroundColour(wx.SystemSettings_GetColour(wx.SYS_COLOUR_BTNFACE))
 
 		self.SetSize((1000, 685))
-		self.SetMinSize((1000,600))
+		self.SetMinSize((1000, 600))
 
 		# end wxGlade
 
@@ -103,12 +103,17 @@ class LoggerFrame(wx.Frame):
 		self.spacerPanel1 = wx.Panel(self, -1)
 		self.spacerPanel2 = wx.Panel(self, -1)
 
-		#self.comSelectLabel = wx.StaticTeIOTech Data Loggerxt(self, -1, "Device Select: ")
-		#controlButtonsSizer.Add(self.comSelectLabel, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 3)
+		self.comSelectLabel = wx.StaticText(self, -1, "Device Select: ")
+		controlButtonsSizer.Add(self.comSelectLabel, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.ALIGN_CENTER_VERTICAL, 3)
 
 		self.comSelect = self.__comSelectComboBox()
 		controlButtonsSizer.Add(self.comSelect, 0, 0, 0)
 		self.Bind(wx.EVT_COMBOBOX, self.setCOMPort, self.comSelect)
+
+
+		self.openIOTechButton = wx.ToggleButton(self, -1, "Open IOTech Device")
+		controlButtonsSizer.Add(self.openIOTechButton, 0, 0, 0)
+		self.Bind(wx.EVT_TOGGLEBUTTON, self.iotechOpenToggle, self.openIOTechButton)
 
 		controlButtonsSizer.Add(self.spacerPanel1, 1, wx.EXPAND, 0)
 
@@ -132,14 +137,12 @@ class LoggerFrame(wx.Frame):
 
 		settingsControlSizer = wx.BoxSizer(wx.HORIZONTAL)
 
-
 		self.logEnBtn = wx.ToggleButton(self, -1, "Log to File")
 		settingsControlSizer.Add(self.logEnBtn, 0, wx.EXPAND, 0)
 
 		self.controlsDisableWhenRunning.append(self.logEnBtn)
 
-
-		infoText = "Log is saved to the subdirectory \"Data\". File is named \"Datalog - Y M D, AM/PM, H-M-S.csv\""
+		infoText = "Log is saved to current directory. File is named \"Datalog - Y M D, AM/PM, H-M-S.csv\""
 
 		self.logInfoLabel = wx.StaticText(self, -1, infoText)
 		settingsControlSizer.Add(self.logInfoLabel, 0, wx.ALL, 2)
@@ -151,8 +154,6 @@ class LoggerFrame(wx.Frame):
 		settingsControlSizer.Add(self.visualizationEnBtn, 0, 0, 0)
 		self.visualizationEnBtn.Value = True
 		self.Bind(wx.EVT_TOGGLEBUTTON, self.visualizationToggle, self.visualizationEnBtn)
-
-
 
 		#self.layoutTestBtn = wx.Button(self, -1, "Layout")
 		#settingsControlSizer.Add(self.layoutTestBtn, 0, 0, 0)
@@ -167,13 +168,13 @@ class LoggerFrame(wx.Frame):
 		statusWinSizer = wx.BoxSizer(wx.HORIZONTAL)
 
 
-		self.statusWin = wx.TextCtrl(self, -1, "", style=wx.TE_MULTILINE|wx.TE_READONLY)
+		self.statusWin = wx.TextCtrl(self, -1, "", style=wx.TE_MULTILINE | wx.TE_READONLY)
 		statusWinSizer.Add(self.statusWin, 1, wx.EXPAND, 0)
 
 		if not queVars.cnf.noRedir:
-			redir=RedirectText(self.statusWin)
-			sys.stdout=redir
-			sys.sterr=redir
+			redir = RedirectText(self.statusWin)
+			#sys.stdout=redir
+			#sys.sterr=redir
 		print "Starting Up..."
 
 		statusWinSizer.Add(self.__channelSelectSizer(), 0, 0, 0)
@@ -189,7 +190,7 @@ class LoggerFrame(wx.Frame):
 		self.logInfoLabel = wx.StaticText(self, -1, infoText)
 		channelSelectSizer.Add(self.logInfoLabel, 0, wx.ALL, 2)
 		for x in range(self.numChannels):
-			checkboxLabel = "Channel %d" % (x+1)
+			checkboxLabel = "Channel %d" % (x + 1)
 			checkbox = wx.CheckBox(self, -1, label=checkboxLabel)
 			self.checkboxes.append(checkbox)
 
@@ -211,8 +212,7 @@ class LoggerFrame(wx.Frame):
 
 		print "Starting Data Visualizer"
 
-		self.IOTechConfig.circularBuffer = queVars.RingBuffer(queVars.ringBufferSize)
-		print type(self.IOTechConfig.circularBuffer)
+		self.IOTechConfig.circularBuffer = queVars.RingBuffer(1000)
 
 		self.visWinSizer = wx.BoxSizer(wx.VERTICAL)
 		panelsEnabled = []
@@ -223,9 +223,9 @@ class LoggerFrame(wx.Frame):
 		if not panelsEnabled:
 			print "No Chanels selected to Graph!"
 		for panelEnabled in panelsEnabled:
-			panelEnabled = int(panelEnabled.split()[-1])-1
+			panelEnabled = int(panelEnabled.split()[-1]) - 1
 
-			visPanel = vizFrame.GraphPanel(self, -1, dataChannel=panelEnabled, configItem = self.IOTechConfig)
+			visPanel = vizFrame.GraphPanel(self, -1, dataChannel=panelEnabled, configItem=self.IOTechConfig)
 			hLine = wx.StaticLine(self, wx.HORIZONTAL)
 			self.vizPanels.append(visPanel)
 			self.visWinSizer.Add(visPanel, 1, wx.EXPAND, 0)
@@ -241,12 +241,8 @@ class LoggerFrame(wx.Frame):
 
 		print "Stopping Data Visualizer"
 
-		while self.vizPanels:				#Delete all the graph panels
+		while self.vizPanels:				# Delete all the graph panels
 			self.vizPanels.pop().Destroy()
-
-
-
-
 
 		self.mainWindowSizer.Detach(self.visWinSizer)
 		self.visWinSizer.Destroy()
@@ -255,8 +251,8 @@ class LoggerFrame(wx.Frame):
 
 		self.Fit()
 
-	def __toggleVizObj(self):
-		if self.VizEnable:
+	def __toggleVizObj(self, enable=True):
+		if self.VizEnable and enable:
 			#print "VizPanel"
 
 			self.__createVisualiztionPanels()
@@ -265,6 +261,8 @@ class LoggerFrame(wx.Frame):
 			self.__destroyVisualiztionPanels()
 
 		self.Layout()
+
+
 	def __setupIOTech(self):
 
 		self.IOTechConfig = DaqS.IOTechConfiguration()
@@ -272,8 +270,8 @@ class LoggerFrame(wx.Frame):
 		#self.IOTechConfig.freq = 5000.0
 		#self.IOTechConfig.iterScans = 1000
 
-		self.IOTechConfig.circularBuffer = queVars.RingBuffer(100)
-		self.IOTechConfig.logDataRam = False
+		self.IOTechConfig.circularBuffer = queVars.RingBuffer(100000)
+		#self.IOTechConfig.logDataRam = False
 		if self.IOTechConfig.deviceNameStr:
 
 			self.daqint = DaqS.IOTechInterface(self.IOTechConfig)
@@ -287,13 +285,12 @@ class LoggerFrame(wx.Frame):
 			control.Disable()
 
 		if self.daqint:
-			self.daqint.startCapture(writeFile = self.logEnBtn.Value)
+			self.daqint.startCapture(writeFile=self.logEnBtn.Value)
 
 
 	def __stopAcquisition(self):
 		if self.daqint:
 			self.daqint.stopCapture()
-
 
 		for control in self.controlsDisableWhenRunning:
 			control.Enable()
@@ -302,11 +299,12 @@ class LoggerFrame(wx.Frame):
 		if self.daqint:
 			self.daqint.closeDevice()
 
+
 	def __createLayoutObjs(self):
 
-		self.DestroyChildren()			#Kill the Children!
+		self.DestroyChildren()			# Kill the Children!
 
-		descText = "IOTech Data Logger"
+		descText = "I2C Temperature Sensor Logger"
 
 		self.headerDescriptionLabel = wx.StaticText(self, -1, descText)
 		self.headerDescriptionLabel.SetFont(wx.Font(12, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, "MS Shell Dlg 2"))
@@ -318,9 +316,8 @@ class LoggerFrame(wx.Frame):
 
 		#print "Starting Up..."
 
+
 	def __do_layout(self):
-
-
 
 		self.mainWindowSizer = wx.BoxSizer(wx.VERTICAL)
 
@@ -339,16 +336,26 @@ class LoggerFrame(wx.Frame):
 
 		#print "Starting Up..."
 
+	def iotechOpenToggle(self, event):
+		if self.openIOTechButton.GetValue():
+			self.__setupIOTech()
+			self.VizEnable = queVars.cnf.visualization
+			self.__toggleVizObj()
+		else:
+			self.__closeIOTech()
+			self.__toggleVizObj(enable=False)
 
 	def toggleAcquisition(self, event):
-
-		if self.takeDataButton.Value:
-			self.__startAquisition()
+		if self.openIOTechButton.GetValue():
+			if self.takeDataButton.Value:
+				self.__startAquisition()
+			else:
+				self.__stopAcquisition()
 		else:
-			self.__stopAcquisition()
+			print "You need to open the IOTech device first"
 
 
-	def setCOMPort(self, event): # wxGlade: ThermFrame.<event_handler>
+	def setCOMPort(self, event): 							# wxGlade: ThermFrame.<event_handler>
 		self.portStr = self.comSelect.GetValue()
 		#print self.portStr
 
@@ -368,7 +375,7 @@ class LoggerFrame(wx.Frame):
 		settingsWindow.start(self)
 		self.Enable()
 
-	def quitApp(self, event): # wxGlade: MainFrame.<event_handler>
+	def quitApp(self, event): 								# wxGlade: MainFrame.<event_handler>
 		print "Exiting"
 		self.__stopAcquisition()
 		queVars.cnf.Shutdown = True
@@ -382,6 +389,7 @@ class LoggerFrame(wx.Frame):
 				self.visWinSizer.Destroy()
 			except:
 				pass
+		self.IOTechConfig.saveSettings()
 		self.__closeIOTech()
 		print "GUI Exiting"
 		wx.Exit()
@@ -401,11 +409,11 @@ class LoggerFrame(wx.Frame):
 		self.ClearBackground()
 		self.Layout()
 
-	def updateGUI(self, event): # wxGlade: MainW.<event_handler>		Main Polling Loop
+	def updateGUI(self, event): 							# wxGlade: MainW.<event_handler>		Main Polling Loop
 		tb = self.logEnBtn.GetValue()
 		#print "tb", tb
 		if (queVars.cnf.logEn == False) and (tb == True):
-			queVars.cnf.logName =  time.strftime("Data/Datalog - %Y %m %d, %a, %H-%M-%S.csv", time.localtime())
+			queVars.cnf.logName = "IIC Temp Log %s, %s.txt" % (time.time(), time.strftime("%Y-%m-%d %H;%M;%S;", time.gmtime()))
 			queVars.cnf.logEn = True
 			print "Logging Started"
 			print "Logging to file: %s" % queVars.cnf.logName
@@ -428,11 +436,10 @@ class MyApp(wx.App):
 
 		#Set up the filter timer, and stop it.
 		#It can then be restarted by simply calling filterTimer.Start()
-		TemperatureFrame.filterTimer.Start((1000/30), 0)	#30 hz update rate
+		TemperatureFrame.filterTimer.Start((1000 / 30), 0)		# 30 hz update rate
 		TemperatureFrame.filterTimer.Stop()
 
 
-		TemperatureFrame.tbUpdate.Start((1000/30), 0)
+		TemperatureFrame.tbUpdate.Start(25, 0)
 		TemperatureFrame.Show()
 		return 1
-

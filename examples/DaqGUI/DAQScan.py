@@ -44,7 +44,7 @@ class IOTechConfiguration:
 						{"channelGain" : daqh.DgainX1, "channelFlags" : [daqh.DafBipolar, daqh.DafSettle1us]},
 						{"channelGain" : daqh.DgainX1, "channelFlags" : [daqh.DafBipolar, daqh.DafSettle1us]},
 						{"channelGain" : daqh.DgainX1, "channelFlags" : [daqh.DafBipolar, daqh.DafSettle1us]} ]
-						
+
 		self.scanSettings	= {	"scans"			: 1000,
 						"clockSource"		: daqh.DacsAdcClock,
 						"transferMask"		: [daqh.DatmDriverBuf, daqh.DatmUpdateBlock, daqh.DatmCycleOn],
@@ -75,7 +75,7 @@ class IOTechConfiguration:
 				#daqh.DafBipolar|daqh.DafSettle1us]
 
 		self.channels = [0, 1, 2, 3] 		# , 4, 5, 6, 7]
-	
+
 
 		self.clockSource = daqh.DacsAdcClock
 
@@ -86,7 +86,7 @@ class IOTechConfiguration:
 		self.buf = False
 
 		self.triggerEv = daqh.DatsImmediate
-		
+
 		self.rateMode = daqh.DarmFrequency
 
 		self.rateState = daqh.DaasPostTrig
@@ -95,7 +95,7 @@ class IOTechConfiguration:
 
 		self.iterScans = 1000
 
-		
+
 		try:
 			devL = daq.GetDeviceList()
 		except:
@@ -124,7 +124,7 @@ class IOTechConfiguration:
 			traceback.print_exc()
 			print "Failed to load settings file. Is this the first run on this computer?"
 			print os.getcwd()
-			
+
 	def load(self, fp):
 		pickleCont = fp.read()
 		unpickled = cPickle.loads(pickleCont)
@@ -133,7 +133,7 @@ class IOTechConfiguration:
 
 	def saveSettings(self):
 		print "Pickling"
-		
+
 
 		settingsFile = open(self.settingsFileName, "w")
 		print cPickle.dump(self.acqSettings, settingsFile)
@@ -144,7 +144,7 @@ class IOTechConfiguration:
 		gains		= []
 		flags		= []
 		channels	= []
-		
+
 		index = 0
 		for chan in self.acqSettings["channel"]:
 			gains.append(chan["channelGain"])
@@ -155,7 +155,7 @@ class IOTechConfiguration:
 			channels.append(index)
 			index += 1
 		return gains, flags, channels
-	
+
 	def setSampleFreq(self, freq):
 
 		aggFreq = freq * len(self.channels) 	# 1000 Hertz
@@ -171,7 +171,7 @@ class IOTechConfiguration:
 	def listDevices(self):
 		return daq.GetDeviceList()
 
-		
+
 class IOTechInterface:
 
 	capRunning = False
@@ -208,13 +208,13 @@ class IOTechInterface:
 	# Configure Triggering
 			self.iotech.SetTriggerEvent(self.config.acqSettings["scan"]["triggerEvent"], None, 0, 0, 0, 0, 0, 0, 0)
 
-			
+
 	# Configure ADC Scanrate
 
 			self.iotech.AdcSetRate(self.config.rateMode, self.config.rateState, self.config.freq)
 
-			
-		
+
+
 			return True
 
 		else:
@@ -243,7 +243,8 @@ class IOTechInterface:
 		self.iotech.AdcTransferStart()
 
 		arrShape = (self.config.iterScans, len(self.config.channels))
-		
+
+
 		if self.writeToLogFile:
 			filename = time.strftime("Datalog - %Y %m %d, %a, %H-%M-%S.csv", time.localtime())
 			file = open(filename, "wb")
@@ -253,7 +254,7 @@ class IOTechInterface:
 
 		bufMask = daqh.DabtmOldest | daqh.DabtmRetAvail
 
-		
+
 		print "Starting Loop"
 
 		while self.capRunning:
@@ -261,7 +262,7 @@ class IOTechInterface:
 			#print "Stat", stat
 
 			tempDat, retNum = self.iotech.AdcTransferBufData(self.config.iterScans, bufMask)
-			
+
 			tempDat = np.array(tempDat)
 
 
@@ -301,7 +302,7 @@ class IOTechInterface:
 			self.capRunning = False
 			print "Stopping Capture"
 			self.capMonThread.join()
-		
+
 	def plotData(self):
 		if not self.config.logDataRam:
 			raise ValueError
@@ -340,7 +341,7 @@ if __name__ == "__main__":
 
 
 
-	
+
 	config = IOTechConfiguration()
 
 
@@ -384,4 +385,4 @@ if __name__ == "__main__":
 	interface.plotData()
 
 
-	
+

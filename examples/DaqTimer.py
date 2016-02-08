@@ -25,10 +25,10 @@ outChan = 0
 outType = DddtLocal #Always use, default
 outData = 3.3 #In Volts
 outSwitch = True
-outFreq = 0.5 
+outFreq = 0.5
 
 #Data to read
-data = [] 
+data = []
 
 #Timer functions
 def daqOutput(outSwitch):
