@@ -172,9 +172,12 @@ class daqDevice(object):
 
     def ADConvert(self, request):
         """Converts returned 16bit integer to a voltage of a Dbk2000 Bipolar no gain"""
-        cal = 5.0/(2**16)
-        val = request*cal - 2.5
-        return val
+        raise NotImplementedError('Previously this method was too device-'
+            'specific and therefore dangerous.\nThe conversion to voltage '
+            'depends on the:\n\tdevice input voltage range,\n\tdevice bit depth,'
+            '\n\tgain setting,\n\tUnipolar/Bipolar input setting, and\n\t'
+            'Unsigned/Signed integer output setting.'
+            )
 
     #Error handling functions
     def SetErrorHandler(self, function=None):
