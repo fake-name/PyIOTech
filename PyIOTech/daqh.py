@@ -1,3 +1,5 @@
+# Constants from the header file 'Daqx.h'
+
 #****************************************************************/
 #                                                               */
 #    Initialization/Error Handling Definitions and Prototypes   */
@@ -986,6 +988,15 @@ DgainX8              = 3
 DgainX16             = 4  # DaqBoard2000 series only
 DgainX32             = 5  # DaqBoard2000 series only
 DgainX64             = 6  # DaqBoard2000 series only
+
+# DaqBoard/3000 Base Unit
+DgainDbd3kX1         = 0
+DgainDbd3kX2         = 1
+DgainDbd3kX5         = 2
+DgainDbd3kX10        = 3
+DgainDbd3kX20        = 4
+DgainDbd3kX50        = 5
+DgainDbd3kX100       = 6
 
 # Base Unit Gain on DBK Connected Channel */
 # Reference Only : Use DBK Specific Codes in Applications */
