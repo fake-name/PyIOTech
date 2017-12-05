@@ -295,17 +295,17 @@ class daqDevice(object):
 
         err = daq.daqAdcSetRate(self.handle, mode, state, reqValue, pactualValue)
 
-        print(reqValue, actualValue)
+        # print(reqValue, actualValue)
         if err != 0:
             raise DaqError(err)
 
 
-        if mode == daqh.DarmFrequency:
-            errRatio = reqValue.value / actualValue.value
-            err = abs(1 - errRatio)
-            if err > 0.1:
-                print("Frequency setpoint error percentage: ", err * 100)
-                raise ValueError("Frequency setpoint not achievable on hardware. Please choose a different data-rate")
+        # if mode == daqh.DarmFrequency:
+        #     errRatio = reqValue.value / actualValue.value
+        #     err = abs(1 - errRatio)
+        #     if err > 0.1:
+        #         print("Frequency setpoint error percentage: ", err * 100)
+        #         raise ValueError("Frequency setpoint not achievable on hardware. Please choose a different data-rate")
 
         return actualValue.value
 
